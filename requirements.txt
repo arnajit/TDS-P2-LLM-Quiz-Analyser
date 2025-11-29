@@ -6,6 +6,7 @@ uvicorn
 langgraph>=0.1.0
 langchain-core>=0.3.0
 langchain>=0.2.0
+langchain-google-genai
 
 # Google Gemini API client
 google-genai>=0.5.0
@@ -19,10 +20,7 @@ requests
 beautifulsoup4
 lxml
 
-# HTML parsing, URL join utils
-urllib3
-
-# PDF parsing (TDS sometimes uses PDF)
+# PDF parsing
 PyPDF2
 
 # Images + OCR
@@ -36,6 +34,6 @@ ffmpeg-python
 # Base64 and file upload helpers
 python-multipart
 
-# Data libraries (many quizzes require computations)
+# Data libraries
 numpy
 pandas
