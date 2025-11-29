@@ -1,154 +1,130 @@
 # TDS-P2-LLM-Quiz-Analyser
 
-TDS-P2-LLM-Quiz-Analyser is a tool for analyzing multiple-choice quizzes using Large Language Models (LLMs). It helps educators and content creators automatically grade quizzes, provide item-level analysis (difficulty, discrimination), generate feedback and distractors, and surface insights about student performance and question quality.
+A toolkit for analyzing quiz content and responses using large language models (LLMs). This project provides components to ingest quizzes, run automated analyses (difficulty, topic coverage, distractor quality, grading and feedback generation), and produce human-readable reports to help instructors and content authors improve quizzes.
 
-This README provides an overview, quickstart instructions, expected data formats, example usage, and guidance for contribution.
+> Note: This README is intentionally generic and written to be easily adapted. If you want the usage examples or script names tailored to the repository's actual entry points, tell me which files to reference and I'll update it.
 
 ## Features
 
-- Auto-grade multiple-choice quizzes from structured quiz files.
-- Per-question analysis: difficulty estimate, discrimination index, and flagged ambiguous items.
-- Natural-language feedback generation for each student response.
-- Optionally generate improved distractors and alternative phrasings using an LLM.
-- Export results to CSV / JSON for reporting and visualization.
-- Extensible: supports different LLM providers (OpenAI, local models) via a config layer.
+- Ingest quiz datasets (CSV, JSON, or similar formats).
+- Use LLMs to:
+  - Assess question difficulty and clarity.
+  - Tag questions by topic and learning objective.
+  - Evaluate distractor quality for multiple-choice items.
+  - Generate graded feedback and suggested improvements.
+- Output structured reports (JSON/CSV) and human-friendly summaries.
+- Configurable model/provider integration (OpenAI, Anthropic, local models).
+- Modular codebase for easy extension and experimentation.
 
 ## Who is this for?
 
-- Teachers and instructional designers who want faster item analysis.
-- Researchers analyzing quiz quality and student performance.
-- Developers building LLM-assisted assessment tooling.
+- Instructional designers and educators who want automated insights on quiz quality.
+- Developers building educational tooling that needs automatic analysis and labeling.
+- Researchers exploring automated question analysis using LLMs.
 
-## Quick Start
+## Repository layout
 
-1. Clone the repository:
+This project follows a modular layout (adjust to actual paths in the repo as needed):
+
+- data/                     - Example input files and sample exports
+- src/                      - Core application logic and modules
+  - ingestion/              - Parsers for CSV/JSON quiz formats
+  - llm/                    - Model adapters, prompts, and response parsing
+  - analysis/               - Scoring logic, metrics, and heuristics
+  - reporting/              - Report generation (JSON, CSV, HTML)
+  - cli.py                  - Command-line entry point
+- tests/                    - Unit and integration tests
+- docs/                     - Additional docs and design notes
+- requirements.txt          - Python dependencies (if applicable)
+
+(If your repository layout differs, update this section to reflect the actual structure.)
+
+## Quickstart
+
+Prerequisites:
+- Python 3.8+ (if this is a Python project) or the appropriate runtime for your implementation.
+- pip and virtualenv (or conda), or another language's package manager.
+- An API key for your chosen LLM provider (e.g., OPENAI_API_KEY) if using hosted models.
+
+Basic setup (Python example):
+
+1. Clone the repository
    git clone https://github.com/arnajit/TDS-P2-LLM-Quiz-Analyser.git
    cd TDS-P2-LLM-Quiz-Analyser
 
-2. Create and activate a virtual environment (Python example):
-   python3 -m venv .venv
-   source .venv/bin/activate
+2. Create and activate a virtual environment
+   python -m venv .venv
+   source .venv/bin/activate   # macOS/Linux
+   .venv\Scripts\activate      # Windows
 
-3. Install dependencies:
+3. Install dependencies
    pip install -r requirements.txt
 
-4. Configure your LLM provider credentials (example uses OpenAI):
-   export OPENAI_API_KEY="sk-..."
+4. Set environment variables
+   export OPENAI_API_KEY="sk-..."         # macOS/Linux
+   setx OPENAI_API_KEY "sk-..."           # Windows (or use your shell)
 
-5. Run the analyser on a quiz file:
-   python -m tds_quiz_analyser.cli analyze --input examples/sample_quiz.json --output results/report.json
+5. Run an analysis (example placeholder)
+   python src/cli.py analyze --input data/sample_quizzes.csv --output reports/report.json
 
-Note: Commands above are examples — adapt to the actual CLI/module names in the repository.
+Notes:
+- Replace the CLI command above with the actual entry point in the repository (e.g., `python src/main.py`, or a package/module invocation).
+- If you use another LLM provider or local model, configure the provider adapter in the config file or environment variables.
 
-## Installation
+## Usage examples
 
-The repository supports running directly from source. If a package distribution is provided, install with pip:
+Example: Analyze a quiz file and generate a JSON report
+- Input: data/sample_quizzes.csv
+- Output: reports/sample_analysis.json
 
-pip install .
+Command (placeholder):
+python src/cli.py analyze \
+  --input data/sample_quizzes.csv \
+  --model openai/gpt-4 \
+  --output reports/sample_analysis.json \
+  --topics --difficulty --distractors --feedback
 
-Or, for development:
+Example: Generate an HTML summary for instructors
+python src/cli.py summarize --report reports/sample_analysis.json --format html --out reports/summary.html
 
-pip install -e .
+Adjust flags and module names to match the repository's actual CLI API.
 
 ## Configuration
 
-The analyser can be configured through environment variables or a config file (e.g., `config.yaml`). Typical configuration settings:
+Common configuration options (implement as environment variables or config file):
+- MODEL_PROVIDER (e.g., openai, anthropic, local)
+- MODEL_NAME (e.g., gpt-4, gpt-4o, claude-2)
+- OPENAI_API_KEY (or provider-specific keys)
+- MAX_TOKENS, TEMPERATURE, RETRIES
+- DEFAULT_OUTPUT_FORMAT (json/csv/html)
+- PROMPT_TEMPLATES_DIR (path to prompt templates)
 
-- LLM provider (openai, local, etc.)
-- API key or credentials (e.g., OPENAI_API_KEY)
-- Model name (gpt-4, gpt-3.5-turbo, local-llm)
-- Analysis options (generate_feedback: true/false, generate_distractors: true/false)
-- Output formats (json, csv)
+## Architecture & Design Notes
 
-Example environment variable:
-export OPENAI_API_KEY="sk-..."
+- Prompting: Keep prompts modular and maintain templates in a dedicated directory so tests and improvements are easy to apply.
+- Safety: Sanitize input content and be mindful of exposing student data to third-party APIs. Consider on-prem models for sensitive data.
+- Extensibility: Provide a clear adapter interface for new model providers and for alternate analysis heuristics.
 
-Example `config.yaml`:
-```yaml
-llm:
-  provider: openai
-  model: gpt-4
-  temperature: 0.2
-analysis:
-  generate_feedback: true
-  generate_distractors: false
-output:
-  formats: ["json","csv"]
-```
+## Metrics & Evaluation
 
-## Data format
+- Suggested automated metrics to compute:
+  - Question difficulty distribution (easy / medium / hard)
+  - Topic coverage (questions per learning objective)
+  - Distractor quality score (for MCQs)
+  - Estimated discrimination index and reliability (if student-response data available)
 
-Input quiz files should be structured JSON (or CSV) describing the quiz, questions, choices, and student responses. Example JSON schema:
-
-{
-  "quiz_id": "quiz-001",
-  "title": "Intro to Biology - Quiz 1",
-  "questions": [
-    {
-      "id": "q1",
-      "text": "What is the powerhouse of the cell?",
-      "choices": [
-        {"id":"a","text":"Nucleus"},
-        {"id":"b","text":"Mitochondria"},
-        {"id":"c","text":"Ribosome"},
-        {"id":"d","text":"Golgi apparatus"}
-      ],
-      "correct_choice_id": "b"
-    }
-  ],
-  "responses": [
-    {
-      "student_id": "s1",
-      "answers": [
-        {"question_id":"q1","choice_id":"a"}
-      ]
-    }
-  ]
-}
-
-Adjust field names as needed by your local data pipeline. The repo includes example input files in `examples/`.
-
-## Usage
-
-CLI (example):
-- Analyze a quiz:
-  python -m tds_quiz_analyser.cli analyze --input path/to/quiz.json --output path/to/report.json
-
-- Run analysis with custom config:
-  python -m tds_quiz_analyser.cli analyze --input quiz.json --config config.yaml
-
-Python API (example):
-from tds_quiz_analyser import QuizAnalyser, load_quiz
-quiz = load_quiz("examples/sample_quiz.json")
-analyser = QuizAnalyser(config={"llm": {"provider": "openai", "model": "gpt-4"}})
-report = analyser.run(quiz)
-print(report.to_json())
-
-Outputs typically include:
-- per-student grading (score, correct/incorrect)
-- per-question statistics (p-value/difficulty, discrimination index)
-- flagged items (ambiguous or low-quality distractors)
-- generated feedback (if enabled)
-- optional recommended alternative distractors or rewrite suggestions
-
-## Examples
-
-Look in the `examples/` folder for:
-- sample_quiz.json — a minimal quiz and response set
-- run_examples.sh — example commands to run the analyser
-
-## Testing
-
-Run tests with pytest:
-pytest
-
-If tests require network access to the LLM provider, consider using recorded responses or mocks (see tests/fixtures).
+- Collect human validation samples to calibrate thresholds and prompt templates for your domain.
 
 ## Development
 
-- Use a virtual environment and keep dependencies in `requirements.txt`.
-- Linting and formatting: run flake8 / black if configured.
-- When adding new LLM providers, implement the provider interface in `tds_quiz_analyser/llm_providers/`.
+- Run tests:
+  pytest -q
+
+- Run linting and formatting:
+  black .
+  flake8
+
+- Add new LLM adapters by implementing the adapter interface in src/llm/
 
 ## Contributing
 
@@ -156,40 +132,35 @@ Contributions are welcome. Suggested workflow:
 1. Fork the repository.
 2. Create a feature branch: git checkout -b feat/your-feature
 3. Add tests and documentation.
-4. Submit a pull request describing your change.
+4. Open a pull request describing your changes and the motivation.
 
-Please follow the repository's code style and include tests for new features.
+Please follow the existing coding and documentation style. If you plan a large change, open an issue first to discuss the design.
 
-## Security and Privacy
+## Examples and sample data
 
-- Do not commit API keys or sensitive student data. Use environment variables or secure vaults for secrets.
-- Ensure any student data you analyze complies with applicable privacy regulations (e.g., FERPA, GDPR).
+- data/sample_quizzes.csv — sample input format (questions, options, correct answers, metadata)
+- reports/ — example outputs generated by the analysis pipeline
 
-## Roadmap / Ideas
-
-- Support for adaptive quizzes and item-response theory (IRT) analysis.
-- Integration with LMS platforms (Canvas, Moodle).
-- Web frontend for interactive reports and per-student dashboards.
-- Batch processing and streaming ingestion for large-scale deployments.
+If sample files are not present, create a small CSV with columns such as:
+id, question, option_a, option_b, option_c, option_d, correct_option, topic, difficulty_manual
 
 ## Troubleshooting
 
-- If the analyser fails to contact the LLM provider, verify API key and network connectivity.
-- For unexpected analysis results, review the raw response logs (if enabled) and sample inputs.
+- If you see API rate limits: reduce concurrency, add retries/backoff, or switch to a higher-tier model.
+- If outputs are inconsistent: stabilize prompts, add system-level instructions, and use few-shot examples.
 
 ## License
 
-Specify the license for this repository (e.g., MIT). Update LICENSE file accordingly.
+Specify the project license (e.g., MIT). If none is present, add a LICENSE file to the repository.
 
 ## Contact
 
 Maintainer: arnajit
-GitHub: https://github.com/arnajit/TDS-P2-LLM-Quiz-Analyser
+Repository: https://github.com/arnajit/TDS-P2-LLM-Quiz-Analyser
 
 ---
 
-If you'd like, I can:
-- tailor the README to the repository's actual language and CLI names by inspecting the code, or
-- open a README.md file commit in the repository for you.
-
-Tell me which you'd prefer and I will proceed.
+If you want, I can:
+- Tailor the Usage section to exact script/module names found in the repo (point me to the CLI or main scripts).
+- Add badges (build, license, coverage).
+- Generate a minimal sample dataset and a demo command that runs end-to-end. Which would you prefer next?
