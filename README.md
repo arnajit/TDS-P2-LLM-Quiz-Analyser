@@ -1,201 +1,195 @@
-🚀 TDS Project – Automated Quiz Solving API (FastAPI + LangGraph + Gemini + Playwright)
+# TDS-P2-LLM-Quiz-Analyser
 
-This repository implements a fully automated Task-Driven Data Science (TDS) quiz-solving agent.
-It is designed to handle multi-step quiz URLs, extract data from web pages, solve analytical tasks, and respond correctly within strict time limits using a headless browser and LLM-powered reasoning.
+TDS-P2-LLM-Quiz-Analyser is a tool for analyzing multiple-choice quizzes using Large Language Models (LLMs). It helps educators and content creators automatically grade quizzes, provide item-level analysis (difficulty, discrimination), generate feedback and distractors, and surface insights about student performance and question quality.
 
-This project powers a backend FastAPI endpoint used for evaluation on TDS servers.
+This README provides an overview, quickstart instructions, expected data formats, example usage, and guidance for contribution.
 
-📌 Features
-✅ FastAPI endpoint for receiving quiz tasks
+## Features
 
-Validates email, secret, and quiz URL
+- Auto-grade multiple-choice quizzes from structured quiz files.
+- Per-question analysis: difficulty estimate, discrimination index, and flagged ambiguous items.
+- Natural-language feedback generation for each student response.
+- Optionally generate improved distractors and alternative phrasings using an LLM.
+- Export results to CSV / JSON for reporting and visualization.
+- Extensible: supports different LLM providers (OpenAI, local models) via a config layer.
 
-Responds with proper status codes: 200, 400, 403
+## Who is this for?
 
-Runs the agent asynchronously using background tasks
+- Teachers and instructional designers who want faster item analysis.
+- Researchers analyzing quiz quality and student performance.
+- Developers building LLM-assisted assessment tooling.
 
-Uses /solve as the main entrypoint
+## Quick Start
 
-✅ Autonomous Agent (LangGraph + Gemini 2.5 Flash)
+1. Clone the repository:
+   git clone https://github.com/arnajit/TDS-P2-LLM-Quiz-Analyser.git
+   cd TDS-P2-LLM-Quiz-Analyser
 
-The agent can:
+2. Create and activate a virtual environment (Python example):
+   python3 -m venv .venv
+   source .venv/bin/activate
 
-Load quiz pages (including JS-rendered pages via Playwright)
+3. Install dependencies:
+   pip install -r requirements.txt
 
-Extract instructions and submission endpoints
+4. Configure your LLM provider credentials (example uses OpenAI):
+   export OPENAI_API_KEY="sk-..."
 
-Download and parse files (CSV/PDF/Images/Audio)
+5. Run the analyser on a quiz file:
+   python -m tds_quiz_analyser.cli analyze --input examples/sample_quiz.json --output results/report.json
 
-Perform OCR using Gemini Vision
+Note: Commands above are examples — adapt to the actual CLI/module names in the repository.
 
-Transcribe audio using SpeechRecognition
+## Installation
 
-Execute Python code safely inside sandbox
+The repository supports running directly from source. If a package distribution is provided, install with pip:
 
-Submit answers using the exact endpoint defined in the quiz
+pip install .
 
-Handle:
+Or, for development:
 
-Retries
+pip install -e .
 
-Timeouts
+## Configuration
 
-Multi-step quiz chains
+The analyser can be configured through environment variables or a config file (e.g., `config.yaml`). Typical configuration settings:
 
-Base64 encodings
+- LLM provider (openai, local, etc.)
+- API key or credentials (e.g., OPENAI_API_KEY)
+- Model name (gpt-4, gpt-3.5-turbo, local-llm)
+- Analysis options (generate_feedback: true/false, generate_distractors: true/false)
+- Output formats (json, csv)
 
-Audio transcription
+Example environment variable:
+export OPENAI_API_KEY="sk-..."
 
-Malformed JSON tool calls
+Example `config.yaml`:
+```yaml
+llm:
+  provider: openai
+  model: gpt-4
+  temperature: 0.2
+analysis:
+  generate_feedback: true
+  generate_distractors: false
+output:
+  formats: ["json","csv"]
+```
 
-Server-provided “next URL” sequences
+## Data format
 
-✅ Advanced Tools Included
-Tool	Purpose
-get_rendered_html	JS rendering using Playwright Chromium
-download_file	Save remote files into LLMFiles/
-encode_image_to_base64	Safe Base64 encoding via shared store
-ocr_image_tool	Gemini Vision OCR
-transcribe_audio	MP3 → WAV → speech-to-text
-run_code	Controlled Python execution
-add_dependencies	Install missing packages via uv
-post_request	Safe POST with retry + timing logic
-📁 Project Structure
-tdsp22/
-│
-├── agent.py              # LangGraph agent definition
-├── main.py               # FastAPI server (entrypoint)
-├── shared_store.py       # Shared runtime storage (base64, timers)
-│
-├── requirements.txt      # Python dependencies
-├── Dockerfile            # HuggingFace Spaces Docker config
-│
-├── README.md             # Project documentation
-└── LICENSE               # MIT License
-
-🔥 How the System Works
-1️⃣ TDS Server → Your /solve Endpoint
-
-Example incoming payload:
+Input quiz files should be structured JSON (or CSV) describing the quiz, questions, choices, and student responses. Example JSON schema:
 
 {
-  "email": "your-email",
-  "secret": "your-secret",
-  "url": "https://example.com/quiz-834"
+  "quiz_id": "quiz-001",
+  "title": "Intro to Biology - Quiz 1",
+  "questions": [
+    {
+      "id": "q1",
+      "text": "What is the powerhouse of the cell?",
+      "choices": [
+        {"id":"a","text":"Nucleus"},
+        {"id":"b","text":"Mitochondria"},
+        {"id":"c","text":"Ribosome"},
+        {"id":"d","text":"Golgi apparatus"}
+      ],
+      "correct_choice_id": "b"
+    }
+  ],
+  "responses": [
+    {
+      "student_id": "s1",
+      "answers": [
+        {"question_id":"q1","choice_id":"a"}
+      ]
+    }
+  ]
 }
 
-2️⃣ Your server verifies:
+Adjust field names as needed by your local data pipeline. The repo includes example input files in `examples/`.
 
-JSON validity
+## Usage
 
-Secret correctness
+CLI (example):
+- Analyze a quiz:
+  python -m tds_quiz_analyser.cli analyze --input path/to/quiz.json --output path/to/report.json
 
-Required fields
+- Run analysis with custom config:
+  python -m tds_quiz_analyser.cli analyze --input quiz.json --config config.yaml
 
-3️⃣ Agent starts solving the quiz
+Python API (example):
+from tds_quiz_analyser import QuizAnalyser, load_quiz
+quiz = load_quiz("examples/sample_quiz.json")
+analyser = QuizAnalyser(config={"llm": {"provider": "openai", "model": "gpt-4"}})
+report = analyser.run(quiz)
+print(report.to_json())
 
-The agent will:
+Outputs typically include:
+- per-student grading (score, correct/incorrect)
+- per-question statistics (p-value/difficulty, discrimination index)
+- flagged items (ambiguous or low-quality distractors)
+- generated feedback (if enabled)
+- optional recommended alternative distractors or rewrite suggestions
 
-Fetch the quiz page
+## Examples
 
-Render JavaScript if needed
+Look in the `examples/` folder for:
+- sample_quiz.json — a minimal quiz and response set
+- run_examples.sh — example commands to run the analyser
 
-Extract data
+## Testing
 
-Solve the task (code execution, analysis, OCR, etc.)
+Run tests with pytest:
+pytest
 
-Prepare answer JSON
+If tests require network access to the LLM provider, consider using recorded responses or mocks (see tests/fixtures).
 
-Submit to the submit endpoint defined inside the page
+## Development
 
-4️⃣ Server Response Handling
+- Use a virtual environment and keep dependencies in `requirements.txt`.
+- Linting and formatting: run flake8 / black if configured.
+- When adding new LLM providers, implement the provider interface in `tds_quiz_analyser/llm_providers/`.
 
-If:
+## Contributing
 
-correct: true + url: next-quiz-url → continue solving
+Contributions are welcome. Suggested workflow:
+1. Fork the repository.
+2. Create a feature branch: git checkout -b feat/your-feature
+3. Add tests and documentation.
+4. Submit a pull request describing your change.
 
-correct: false + within 3 minutes → retry
+Please follow the repository's code style and include tests for new features.
 
-No next URL → finish
+## Security and Privacy
 
-All logic respects TDS timing rules:
-3-minute absolute timeout per quiz.
+- Do not commit API keys or sensitive student data. Use environment variables or secure vaults for secrets.
+- Ensure any student data you analyze complies with applicable privacy regulations (e.g., FERPA, GDPR).
 
-🐳 Deployment (Hugging Face Spaces – Docker)
+## Roadmap / Ideas
 
-This Space is deployed using a custom Dockerfile with:
+- Support for adaptive quizzes and item-response theory (IRT) analysis.
+- Integration with LMS platforms (Canvas, Moodle).
+- Web frontend for interactive reports and per-student dashboards.
+- Batch processing and streaming ingestion for large-scale deployments.
 
-Python 3.10 slim-bookworm
+## Troubleshooting
 
-Playwright Chromium + dependencies
+- If the analyser fails to contact the LLM provider, verify API key and network connectivity.
+- For unexpected analysis results, review the raw response logs (if enabled) and sample inputs.
 
-Tesseract OCR
+## License
 
-FFmpeg
+Specify the license for this repository (e.g., MIT). Update LICENSE file accordingly.
 
-All requirements installed via uv --system
+## Contact
 
-The server runs automatically:
+Maintainer: arnajit
+GitHub: https://github.com/arnajit/TDS-P2-LLM-Quiz-Analyser
 
-uv run main.py
+---
 
+If you'd like, I can:
+- tailor the README to the repository's actual language and CLI names by inspecting the code, or
+- open a README.md file commit in the repository for you.
 
-Your public API endpoint becomes:
-
-https://<username>-<space-name>.hf.space/solve
-
-▶️ Running Locally
-1. Create environment
-uv venv
-uv pip install -r requirements.txt
-
-2. Run Playwright (first time only)
-playwright install chromium
-
-3. Start API
-uvicorn main:app --host 0.0.0.0 --port 7860
-
-🔑 Environment Variables
-
-Create .env:
-
-EMAIL=your-email
-SECRET=your-secret
-GOOGLE_API_KEY=your-gemini-api-key
-
-🧪 Health Check
-GET /healthz
-
-
-Response:
-
-{
-  "status": "ok",
-  "uptime_seconds": 123
-}
-
-📬 Solve Endpoint
-POST /solve
-
-
-Example:
-
-{
-  "email": "your-email",
-  "secret": "your-secret",
-  "url": "https://tds-llm-analysis.s-anand.net/demo"
-}
-
-
-Response:
-
-{
-  "status": "ok"
-}
-
-
-The solving runs asynchronously.
-
-📜 License
-
-This project is licensed under the MIT License.
+Tell me which you'd prefer and I will proceed.
