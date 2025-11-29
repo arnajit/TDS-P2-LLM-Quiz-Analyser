@@ -1,0 +1,41 @@
+# FastAPI server
+fastapi
+uvicorn
+
+# LangGraph / LangChain ecosystem
+langgraph>=0.1.0
+langchain-core>=0.3.0
+langchain>=0.2.0
+
+# Google Gemini API client
+google-genai>=0.5.0
+python-dotenv
+
+# Playwright for JS-rendered HTML
+playwright
+
+# Web & scraping
+requests
+beautifulsoup4
+lxml
+
+# HTML parsing, URL join utils
+urllib3
+
+# PDF parsing (TDS sometimes uses PDF)
+PyPDF2
+
+# Images + OCR
+pillow
+pytesseract
+
+# Audio handling
+SpeechRecognition
+ffmpeg-python
+
+# Base64 and file upload helpers
+python-multipart
+
+# Data libraries (many quizzes require computations)
+numpy
+pandas
