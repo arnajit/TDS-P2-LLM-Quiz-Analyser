@@ -133,12 +133,4 @@ Then open a Pull Request on GitHub.
 - Powered by open LLM APIs (configure provider of your choice).
 
 ## License
-Add a LICENSE file to the repository and set the license here (e.g., MIT, Apache-2.0). If you want a suggested license, the MIT License is a common permissive choice.
-
----
-
-If you'd like, I can:
-- Push this README into the repository on a new branch (I will need confirmation to run that change and the repo owner is already specified as `arnajit`).
-- Tailor the README to specific filenames and examples in your repo if you point me to the main script or a sample input CSV in the repository.
-
-What would you like me to do next?
+MIT license is also genrated for the project
